@@ -1,4 +1,8 @@
-// Copyright 2014 The imapsrv Authors. All rights reserved.
+// Copyright 2014 The imapsrv Authors.
+// Copyright 2016 Duzy Chan <code@duzy.info>
+// 
+// All rights reserved.
+// 
 // Use of this source code is governed by a BSD-style
 // license that can be found in the imapsrv.LICENSE file.
 
@@ -52,6 +56,10 @@ func (p *parser) next() command {
 		return p.logout(tag)
 	case "select":
 		return p.selectC(tag)
+        case "list":
+                return p.list(tag)
+        case "fetch":
+                return p.fetch(tag)
 	default:
 		return p.unknown(tag, rawCommand)
 	}
@@ -60,13 +68,13 @@ func (p *parser) next() command {
 // Create a NOOP command
 func (p *parser) noop(tag string) command {
 	p.match(eolTokenType)
-	return &noop{tag: tag}
+	return &serveNoopCommand{tag: tag}
 }
 
 // Create a capability command
 func (p *parser) capability(tag string) command {
 	p.match(eolTokenType)
-	return &capability{tag: tag}
+	return &serveCapabilityCommand{tag: tag}
 }
 
 // Create a login command
@@ -78,13 +86,15 @@ func (p *parser) login(tag string) command {
 	p.match(eolTokenType)
 
 	// Create the command
-	return &login{tag: tag, userId: userId, password: password}
+	return &serveLoginCommand{tag: tag, userId: userId, password: password}
 }
 
 // Create a logout command
 func (p *parser) logout(tag string) command {
 	p.match(eolTokenType)
-	return &logout{tag: tag}
+	return &serveLogoutCommand{
+                tag: tag,
+        }
 }
 
 // Create a select command
@@ -93,14 +103,34 @@ func (p *parser) selectC(tag string) command {
 	mailbox := p.match(stringTokenType).value
 	p.match(eolTokenType)
 
-	return &selectMailbox{tag: tag, mailbox: mailbox}
+	return &serveSelectCommand{
+                tag: tag, 
+                mailbox: mailbox,
+        }
+}
+
+// Create a list command
+func (p *parser) list(tag string) command {
+        return &serveListCommand{ 
+                tag: tag,
+        }
+}
+
+// Create a fetch command
+func (p *parser) fetch(tag string) command {
+        return &serveFetchCommand{ 
+                tag: tag,
+        }
 }
 
 // Create a placeholder for an unknown command
 func (p *parser) unknown(tag string, cmd string) command {
 	for tok := p.lexer.next(); tok.tokType != eolTokenType; tok = p.lexer.next() {
 	}
-	return &unknownCommand{tag: tag, cmd: cmd}
+	return &serveUnknownCommand{
+                tag: tag, 
+                cmd: cmd,
+        }
 }
 
 // Match the given token

@@ -1,4 +1,8 @@
-// Copyright 2013 The Go-IMAP Authors. All rights reserved.
+// Copyright 2013 The Go-IMAP Authors.
+// Copyright 2016 Duzy Chan <code@duzy.info>.
+//
+// All rights reserved.
+// 
 // Use of this source code is governed by a BSD-style
 // license that can be found in the go-imap.LICENSE file.
 
@@ -30,11 +34,46 @@ func Dial(addr string) (c *Client, err error) {
 	return
 }
 
+// DialFrom dials a IMAP server from a local address.
+func DialFrom(addr, local string) (c *Client, err error) {
+	addr = defaultPort(addr, "143")
+        d := net.Dialer{
+                Timeout: netTimeout,
+                LocalAddr: &net.TCPAddr{ IP:net.ParseIP(local) },
+        }
+	conn, err := d.Dial("tcp", addr)
+	if err == nil {
+		host, _, _ := net.SplitHostPort(addr)
+		if c, err = NewClient(conn, host, clientTimeout); err != nil {
+			conn.Close()
+		}
+	}
+	return
+}
+
 // DialTLS returns a new Client connected to an IMAP server at addr using the
 // specified config for encryption.
 func DialTLS(addr string, config *tls.Config) (c *Client, err error) {
 	addr = defaultPort(addr, "993")
 	conn, err := net.DialTimeout("tcp", addr, netTimeout)
+	if err == nil {
+		host, _, _ := net.SplitHostPort(addr)
+		tlsConn := tls.Client(conn, setServerName(config, host))
+		if c, err = NewClient(tlsConn, host, clientTimeout); err != nil {
+			conn.Close()
+		}
+	}
+	return
+}
+
+// DialTLSFrom dials a IMAP server in TLS from a local address.
+func DialTLSFrom(addr, local string, config *tls.Config) (c *Client, err error) {
+	addr = defaultPort(addr, "993")
+        d := net.Dialer{
+                Timeout: netTimeout,
+                LocalAddr: &net.TCPAddr{ IP:net.ParseIP(local) },
+        }
+	conn, err := d.Dial("tcp", addr)
 	if err == nil {
 		host, _, _ := net.SplitHostPort(addr)
 		tlsConn := tls.Client(conn, setServerName(config, host))

@@ -1,4 +1,8 @@
-// Copyright 2014 The imapsrv Authors. All rights reserved.
+// Copyright 2014 The imapsrv Authors.
+// Copyright 2016 Duzy Chan <code@duzy.info>
+// 
+// All rights reserved.
+// 
 // Use of this source code is governed by a BSD-style
 // license that can be found in the imapsrv.LICENSE file.
 package imap
@@ -40,7 +44,8 @@ func createSession(id int, config *ServerConfig) *session {
 	return &session{
 		id:     id,
 		st:     notAuthenticated,
-		config: config}
+		config: config,
+        }
 }
 
 // Log a message with session information
