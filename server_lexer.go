@@ -47,6 +47,8 @@ const (
 	doubleQuote = 0x22
 	zero        = 0x30
 	nine        = 0x39
+        leftParen   = 0x28
+        rightParen  = 0x29
 	leftCurly   = 0x7b
 	rightCurly  = 0x7d
 	backslash   = 0x5c
@@ -73,6 +75,9 @@ func (l *lexer) next() *token {
 	case doubleQuote:
 		l.consume()
 		return l.qstring()
+        case leftParen:
+		l.consume()
+		return l.comment()
 	case leftCurly:
 		l.consume()
 		return l.literal()
@@ -94,6 +99,34 @@ func (l *lexer) qstring() *token {
 			err := parseError(fmt.Sprintf(
 				"Unexpected character %q in quoted string", l.current))
 			panic(err)
+		case backslash:
+			l.consume()
+			buffer = append(buffer, l.current)
+		default:
+			buffer = append(buffer, l.current)
+		}
+
+		// Get the next character
+		l.consume()
+	}
+
+	// Ignore the closing quote
+	l.consume()
+
+	return &token{string(buffer), stringTokenType}
+}
+
+func (l *lexer) comment() *token {
+
+	var buffer = make([]byte, 0, 16)
+
+	// Collect the characters that are within double quotes
+	for l.current != rightParen {
+
+		switch l.current {
+                case leftParen:
+                        l.consume()
+			buffer = append(buffer, []byte(l.comment().value)...)
 		case backslash:
 			l.consume()
 			buffer = append(buffer, l.current)
@@ -158,7 +191,7 @@ func (l *lexer) astring() *token {
 		buffer = append(buffer, l.current)
 		l.consume()
 	}
-
+        
 	return &token{string(buffer), stringTokenType}
 }
 

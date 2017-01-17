@@ -118,8 +118,11 @@ func (p *parser) list(tag string) command {
 
 // Create a fetch command
 func (p *parser) fetch(tag string) command {
+        seq := p.match(stringTokenType).value
+        dat := p.match(stringTokenType).value
+	p.match(eolTokenType)
         return &serveFetchCommand{ 
-                tag: tag,
+                tag: tag, seq: seq, dat: dat,
         }
 }
 

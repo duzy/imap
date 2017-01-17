@@ -58,7 +58,7 @@ func (c *serveLoginCommand) execute(sess *session) *serverResponse {
 	}
 
 	// TODO: implement login
-	if c.userId == "test@example.com" {
+	if /*c.userId == "test@example.com"*/true {
 		sess.st = authenticated
 		return ok(c.tag, "LOGIN completed")
 	}
@@ -132,10 +132,12 @@ func (c *serveListCommand) execute(s *session) *serverResponse {
 
 type serveFetchCommand struct {
         tag string
+        seq string
+        dat string
 }
 
 func (c *serveFetchCommand) execute(s *session) *serverResponse {
-	message := fmt.Sprintf("FETCH %s", c.tag)
+	message := fmt.Sprintf("%s FETCH %s %s", c.tag, c.seq, c.dat)
 	s.log(message)
 	return bad(c.tag, message)
 }
